@@ -1,4 +1,4 @@
-package eu.danieljalopes.restfulwebservices;
+package eu.danieljalopes.restfulwebservices.helloworld;
 
 public class HelloWorldBean {
 	
