@@ -13,11 +13,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import eu.danieljalopes.restfulwebservices.post.Post;
+import eu.danieljalopes.restfulwebservices.post.PostDaoService;
+import eu.danieljalopes.restfulwebservices.post.PostNotFoundException;
+
 @RestController
 public class UserResource {
 
 	@Autowired
 	private UserDaoService userService;
+
+	@Autowired
+	private PostDaoService postService;
 
 	@GetMapping("/users")
 	public List<User> retrieveAllUsers() {
@@ -27,10 +34,10 @@ public class UserResource {
 	@GetMapping("/users/{id}")
 	public User retrieveUser(@PathVariable int id) {
 		User user = userService.findOne(id);
-		
-		if(Objects.isNull(user))
+
+		if (Objects.isNull(user))
 			throw new UserNotFoundException("id - " + id);
-		
+
 		return user;
 	}
 
@@ -38,10 +45,65 @@ public class UserResource {
 	public ResponseEntity<Object> createUser(@RequestBody User user) {
 		User savedUser = userService.save(user);
 
-		//Fills the location on the header of the response with the uri of the user created
+		// Fills the location on the header of the response with the uri of the user
+		// created
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(savedUser.getId())
 				.toUri();
-		//return with status 201 --> created
+		// return with status 201 --> created
+		return ResponseEntity.created(location).build();
+	}
+
+	@GetMapping("/users/{id}/posts")
+	public List<Post> retrieveAllPostsOfUser(@PathVariable int id) {
+		User user = userService.findOne(id);
+
+		if (Objects.isNull(user))
+			throw new UserNotFoundException("id - " + id);
+
+		List<Post> posts = postService.findPostsOfUser(id);
+
+		return posts;
+	}
+
+	@GetMapping("/users/{id}/posts/{post_id}")
+	public Post postDetailOfUser(@PathVariable int id, @PathVariable int post_id) {
+		User user = userService.findOne(id);
+
+		if (Objects.isNull(user))
+			throw new UserNotFoundException("id - " + id);
+
+		List<Post> posts = postService.findPostsOfUser(id);
+		Post userPost = null;
+
+		for (Post post : posts) {
+			if (post.getId() == post_id)
+				userPost = post;
+			break;
+		}
+
+		if (Objects.isNull(userPost)) {
+			throw new PostNotFoundException("user id - " + id + ", post_id - " + post_id);
+		}
+
+		return userPost;
+	}
+
+	@PostMapping("/users/{id}/posts")
+	public ResponseEntity<Object> createPostForUser(@PathVariable int id, @RequestBody Post post) {
+		User user = userService.findOne(id);
+
+		if (Objects.isNull(user))
+			throw new UserNotFoundException("id - " + id);
+
+		post.setUserId(id);
+
+		post = postService.save(post);
+
+		// Fills the location on the header of the response with the uri of the user and its post created
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand( post.getId()).toUri();
+		
+		// return with status 201 --> created
 		return ResponseEntity.created(location).build();
 	}
 }
