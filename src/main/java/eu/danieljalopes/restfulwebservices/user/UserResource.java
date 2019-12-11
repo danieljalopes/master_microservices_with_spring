@@ -1,5 +1,9 @@
 package eu.danieljalopes.restfulwebservices.user;
 
+import  static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -35,13 +39,19 @@ public class UserResource {
 	}
 
 	@GetMapping("/users/{id}")
-	public User retrieveUser(@PathVariable int id) {
+	public Resource<User> retrieveUser(@PathVariable int id) {
 		User user = userService.findOne(id);
 
 		if (Objects.isNull(user))
 			throw new UserNotFoundException("id - " + id);
 
-		return user;
+		//"all-users", SERVER_PATH + "/users"
+		Resource<User> resource = new Resource<User>(user);
+		
+		ControllerLinkBuilder linkTo = linkTo(methodOn(this.getClass()).retrieveAllUsers());
+		resource.add(linkTo.withRel("all-users"));
+		
+		return resource;
 	}
 
 	@PostMapping("/users")
