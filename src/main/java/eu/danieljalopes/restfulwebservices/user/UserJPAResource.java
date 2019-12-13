@@ -1,17 +1,17 @@
 package eu.danieljalopes.restfulwebservices.user;
 
-import  static org.springframework.hateoas.mvc.ControllerLinkBuilder.*;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,21 +21,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import eu.danieljalopes.restfulwebservices.post.Post;
-import eu.danieljalopes.restfulwebservices.post.PostDaoService;
 import eu.danieljalopes.restfulwebservices.post.PostNotFoundException;
+import eu.danieljalopes.restfulwebservices.post.jpa.Post;
+import eu.danieljalopes.restfulwebservices.post.jpa.PostRepository;
 
 @RestController
 public class UserJPAResource {
 
-	@Autowired
-	private UserDaoService userService;
 
-	@Autowired
-	private PostDaoService postService;
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private PostRepository postRepository;
 	
 	
 	@GetMapping("/jpa/users")
@@ -72,7 +71,7 @@ public class UserJPAResource {
 	}
 
 	@GetMapping("/jpa/users/{id}/posts")
-	public List<eu.danieljalopes.restfulwebservices.post.jpa.Post> retrieveAllPostsOfUser(@PathVariable int id) {
+	public List<Post> retrieveAllPostsOfUser(@PathVariable int id) {
 		Optional<User> userOptional = userRepository.findById(id);
 
 		if (!userOptional.isPresent())
@@ -84,37 +83,35 @@ public class UserJPAResource {
 
 	@GetMapping("/jpa/users/{id}/posts/{post_id}")
 	public Post postDetailOfUser(@PathVariable int id, @PathVariable int post_id) {
-		User user = userService.findOne(id);
+		Optional<User> userOptional = userRepository.findById(id);
 
-		if (Objects.isNull(user))
+		if (!userOptional.isPresent())
 			throw new UserNotFoundException("id - " + id);
 
-		List<Post> posts = postService.findPostsOfUser(id);
-		Post userPost = null;
+		List<Post> posts = userOptional.get().getPosts();
+		Optional<Post> postOptional = posts.stream().filter(p -> p.getId() == post_id).findFirst();;
 
-		for (Post post : posts) {
-			if (post.getId() == post_id)
-				userPost = post;
-			break;
-		}
+		
 
-		if (Objects.isNull(userPost)) {
+		if (!postOptional.isPresent()) {
 			throw new PostNotFoundException("user id - " + id + ", post_id - " + post_id);
 		}
 
-		return userPost;
+		return postOptional.get();
 	}
 
 	@PostMapping("/jpa/users/{id}/posts")
 	public ResponseEntity<Object> createPostForUser(@PathVariable int id, @RequestBody Post post) {
-		User user = userService.findOne(id);
+		Optional<User> userOptional = userRepository.findById(id);
 
-		if (Objects.isNull(user))
+		if (!userOptional.isPresent())
 			throw new UserNotFoundException("id - " + id);
 
-		post.setUserId(id);
+		User user = userOptional.get();
 
-		post = postService.save(post);
+		post.setUser(user);
+
+		post = postRepository.save(post);
 
 		// Fills the location on the header of the response with the uri of the user and its post created
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
