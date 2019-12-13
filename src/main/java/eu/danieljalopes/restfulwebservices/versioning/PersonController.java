@@ -55,6 +55,20 @@ public class PersonController {
 		return new PersonV2("Bob", "Marley");
 	}
 	
+	/*-------------------------------------------------------------
+	 * 
+	 * Using content negotiation to return a different version of a Person
+	 * 
+	 ------------------------------------------------------------*/
 	
+	@GetMapping(value="/person/produces", produces="application/vnd.company.app-v1+json")
+	public PersonV1 getPersonV1Produces() {
+		return new PersonV1("Bob", "Marley");
+	}
+	
+	@GetMapping(value="/person/produces", produces="application/vnd.company.app-v2+json")
+	public PersonV2 getPersonV2Produces() {
+		return new PersonV2("Bob", "Marley");
+	}
 	
 }
