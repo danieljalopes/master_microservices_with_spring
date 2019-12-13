@@ -61,7 +61,7 @@ public class UserJPAResource {
 
 	@PostMapping("/jpa/users")
 	public ResponseEntity<Object> createUser(@Valid @RequestBody User user) {
-		User savedUser = userService.save(user);
+		User savedUser = userRepository.save(user);
 
 		// Fills the location on the header of the response with the uri of the user
 		// created
@@ -127,12 +127,7 @@ public class UserJPAResource {
 	
 	@DeleteMapping("/jpa/users/{id}")
 	public void deleteUser(@PathVariable int id) {
-		User user = userService.deleteById(id);
-		
-		if(Objects.isNull(user)) {
-			throw new UserNotFoundException("id: " + id);
-		}
-		
+		 userRepository.deleteById(id);
 		
 	}
 }
