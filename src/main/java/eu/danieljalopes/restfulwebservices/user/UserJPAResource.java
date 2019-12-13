@@ -72,15 +72,14 @@ public class UserJPAResource {
 	}
 
 	@GetMapping("/jpa/users/{id}/posts")
-	public List<Post> retrieveAllPostsOfUser(@PathVariable int id) {
-		User user = userService.findOne(id);
+	public List<eu.danieljalopes.restfulwebservices.post.jpa.Post> retrieveAllPostsOfUser(@PathVariable int id) {
+		Optional<User> userOptional = userRepository.findById(id);
 
-		if (Objects.isNull(user))
+		if (!userOptional.isPresent())
 			throw new UserNotFoundException("id - " + id);
 
-		List<Post> posts = postService.findPostsOfUser(id);
 
-		return posts;
+		return userOptional.get().getPosts();
 	}
 
 	@GetMapping("/jpa/users/{id}/posts/{post_id}")

@@ -30,7 +30,7 @@ public class User {
 	@ApiModelProperty(notes="Birth date must be in the past")
 	private Date birthDate;
 
-	@OneToMany
+	@OneToMany(mappedBy="user")
 	private List<Post> posts;
 	
 	
