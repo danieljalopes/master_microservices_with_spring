@@ -50,10 +50,10 @@ public class ExchangeValue {
 	public void setTo(String to) {
 		this.to = to;
 	}
-	public BigDecimal getConvertionMultiple() {
+	public BigDecimal getConversionMultiple() {
 		return conversionMultiple;
 	}
-	public void setConvertionMultiple(BigDecimal conversionMultiple) {
+	public void setConversionMultiple(BigDecimal conversionMultiple) {
 		this.conversionMultiple = conversionMultiple;
 	}
 
